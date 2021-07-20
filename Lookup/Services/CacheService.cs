@@ -30,7 +30,7 @@ internal class CacheService
         var value = await database.StringGetAsync(key);
         stopwatch.Stop();
         logger.LogInformation(2002, "Got value for key {key}: {value}", key, value);
-        telemetry.TrackDependency(dependencyType, dependencyName, $"GET {key}", timestamp, TimeSpan.FromTicks(stopwatch.ElapsedTicks), true);
+        telemetry.TrackDependency(dependencyType, dependencyName, $"GET {key}", timestamp, TimeSpan.FromMilliseconds(stopwatch.ElapsedMilliseconds), true);
         return value;
     }
 
@@ -43,7 +43,7 @@ internal class CacheService
         stopwatch.Start();
         await database.StringSetAsync(key, value, timespan);
         stopwatch.Stop();
-        telemetry.TrackDependency(dependencyType, dependencyName, $"SETEX {key} {timespan.TotalSeconds:F0} {value}", timestamp, TimeSpan.FromTicks(stopwatch.ElapsedTicks), true);
+        telemetry.TrackDependency(dependencyType, dependencyName, $"SETEX {key} {timespan.TotalSeconds:F0} {value}", timestamp, TimeSpan.FromMilliseconds(stopwatch.ElapsedMilliseconds), true);
         logger.LogInformation(2004, "Set value {value} for key {key}", value, key);
     }
 }
