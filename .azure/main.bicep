@@ -30,7 +30,7 @@ module sql './sql.bicep' = {
   }
 }
 
-var image = '${cr.outputs.name}${environment().suffixes.acrLoginServer}/{name}:${version}'
+var image = '${cr.outputs.name}${environment().suffixes.acrLoginServer}/${name}:${version}'
 
 module web './web.bicep' = {
   name: 'web-${deployment().name}'
