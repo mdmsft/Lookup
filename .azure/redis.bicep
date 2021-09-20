@@ -1,7 +1,5 @@
-param name string
-
 resource redis 'Microsoft.Cache/redis@2020-12-01' = {
-  name: 'redis-${name}'
+  name: 'redis-${resourceGroup().name}'
   location: resourceGroup().location
   properties: {
     sku: {

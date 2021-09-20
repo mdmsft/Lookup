@@ -1,0 +1,47 @@
+name: Default
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - name: Setup Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Provision infrastructure
+      uses: azure/arm-deploy@v1
+      id: deploy
+      with:
+        resourceGroupName: lookup
+        template: .azure/main.bicep
+        parameters: sqlAdministratorLoginPassword=${{ secrets.SQL_ADMIN_PASSWORD }}
+    
+    - name: Login to ACR
+      uses: Azure/CLI@v1
+      with:
+        inlineScript: |
+          az login -n ${{ steps.deploy.outputs.registryName }}
+    
+    - name: Build container image
+      run: |
+        docker built -t ${{ steps.deploy.outputs.imageName }} ./Lookup
+    
+    - name: Scan container image
+      uses: Azure/container-scan@v0
+      with:
+        image-name: ${{ steps.deploy.outputs.imageName }}
+    
+    - name: Push container image
+      run: |
+        docker push ${{ steps.deploy.outputs.imageName }}

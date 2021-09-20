@@ -1,22 +1,27 @@
-param name string
+param image string
+param virtualNetworkSubnetId string
+param virtualNetworkId string
+param sqlConnectionString string
+param redisConnectionString string
+param appInsightsInstrumentationKey string
 
 var connectionStrings = {
   Database: {
     type: 'SQLAzure'
-    value: '@Microsoft.KeyVault(SecretUri=https://kv-${name}${environment().suffixes.keyvaultDns}/secrets/sqldb-connection-string/)'
+    value: sqlConnectionString
   }
   Redis: {
     type: 'Custom'
-    value: '@Microsoft.KeyVault(SecretUri=https://kv-${name}${environment().suffixes.keyvaultDns}/secrets/redis-connection-string/)'
+    value: redisConnectionString
   }
 }
 
 var appSettings = {
-  'APPINSIGHTS_INSTRUMENTATIONKEY': '@Microsoft.KeyVault(SecretUri=https://kv-${name}${environment().suffixes.keyvaultDns}/secrets/appi-instrumentation-key/)'
+  'APPINSIGHTS_INSTRUMENTATIONKEY': appInsightsInstrumentationKey
 }
 
-resource linuxPlan 'Microsoft.Web/serverfarms@2021-01-01' = {
-  name: 'plan-${name}-linux'
+resource plan 'Microsoft.Web/serverfarms@2021-01-01' = {
+  name: 'plan-${resourceGroup().name}'
   location: resourceGroup().location
   kind: 'linux'
   sku: {
@@ -28,37 +33,27 @@ resource linuxPlan 'Microsoft.Web/serverfarms@2021-01-01' = {
   }
 }
 
-resource windowsPlan 'Microsoft.Web/serverfarms@2021-01-01' = {
-  name: 'plan-${name}-windows'
-  location: resourceGroup().location
-  kind: 'windows'
-  sku: {
-    name: 'S1'
-    tier: 'Standart'
-  }
-  properties: {
-    reserved: false
-  }
-}
-
-resource linuxApp 'Microsoft.Web/sites@2021-01-01' = {
-  name: 'app-${name}-linux'
+resource site 'Microsoft.Web/sites@2021-01-01' = {
+  name: 'app-${resourceGroup().name}'
   location: resourceGroup().location
   identity: {
     type: 'SystemAssigned'
   }
+  kind: 'app,linux,container'
   properties: {
     enabled: true
-    serverFarmId: linuxPlan.id
+    serverFarmId: plan.id
     httpsOnly: true
     reserved: true
     clientAffinityEnabled: false
+    virtualNetworkSubnetId: virtualNetworkSubnetId
     siteConfig: {
+      acrUseManagedIdentityCreds: true
       alwaysOn: true
       ftpsState: 'Disabled'
       healthCheckPath: '/healthz'
       http20Enabled: true
-      linuxFxVersion: 'DOTNETCORE|6.0'
+      linuxFxVersion: 'DOCKER|${image}'
       minTlsVersion: '1.2'
       numberOfWorkers: 1
       use32BitWorkerProcess: false
@@ -75,47 +70,15 @@ resource linuxApp 'Microsoft.Web/sites@2021-01-01' = {
     name: 'connectionstrings'
     properties: connectionStrings
   }
-}
 
-resource windowsApp 'Microsoft.Web/sites@2021-01-01' = {
-  name: 'app-${name}-windows'
-  location: resourceGroup().location
-  identity: {
-    type: 'SystemAssigned'
-  }
-  properties: {
-    enabled: true
-    serverFarmId: windowsPlan.id
-    httpsOnly: true
-    reserved: false
-    clientAffinityEnabled: false
-    siteConfig: {
-      alwaysOn: true
-      ftpsState: 'Disabled'
-      healthCheckPath: '/healthz'
-      http20Enabled: true
-      netFrameworkVersion: 'v6.0'
-      minTlsVersion: '1.2'
-      numberOfWorkers: 1
-      use32BitWorkerProcess: false
-      webSocketsEnabled: false
+  resource virtualNetworkConnection 'virtualNetworkConnections' = {
+    name: 'default'
+    properties: {
+      vnetResourceId: virtualNetworkId
     }
   }
-
-  resource appsettings 'config' = {
-    name: 'appsettings'
-    properties: appSettings
-  }
-
-  resource connectionstrings 'config' = {
-    name: 'connectionstrings'
-    properties: connectionStrings
-  }
 }
 
-output oids array = [
-  linuxApp.identity.principalId
-  windowsApp.identity.principalId
-]
+output oid string = site.identity.principalId
 
-output ips array = union(split(linuxApp.properties.outboundIpAddresses, ','), split(windowsApp.properties.outboundIpAddresses, ','))
+output ips array = split(site.properties.outboundIpAddresses, ',')
