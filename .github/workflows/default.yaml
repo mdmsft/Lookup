@@ -31,7 +31,7 @@ jobs:
       uses: Azure/CLI@v1
       with:
         inlineScript: |
-          az login -n ${{ steps.deploy.outputs.registryName }}
+          az acr login -n ${{ steps.deploy.outputs.registryName }}
     
     - name: Get application version
       id: version
