@@ -35,8 +35,8 @@ jobs:
       with:
         inlineScript: |
           output=`az acr login -n ${{ steps.deploy.outputs.registryName }} --expose-token`
-          echo "::set-output accessToken=`echo $output | jq -r 'accessToken'`"
-          echo "::set-output loginServer=`echo $output | jq -r 'loginServer'`"
+          echo "::set-output accessToken=`echo $output | jq -r '.accessToken'`"
+          echo "::set-output loginServer=`echo $output | jq -r '.loginServer'`"
 
     - name: Login to ACR
       uses: docker/login-action@v1
