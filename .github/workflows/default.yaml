@@ -33,15 +33,27 @@ jobs:
         inlineScript: |
           az login -n ${{ steps.deploy.outputs.registryName }}
     
+    - name: Get application version
+      id: version
+      run: |
+        echo "::set-output version=`cat version`"
+
     - name: Build container image
       run: |
-        docker built -t ${{ steps.deploy.outputs.imageName }} ./Lookup
+        docker built -t ${{ steps.deploy.outputs.imageName }}:${{ steps.version.outputs.version }} ./Lookup
     
     - name: Scan container image
       uses: Azure/container-scan@v0
       with:
-        image-name: ${{ steps.deploy.outputs.imageName }}
+        image-name: ${{ steps.deploy.outputs.imageName }}:${{ steps.version.outputs.version }}
     
     - name: Push container image
       run: |
-        docker push ${{ steps.deploy.outputs.imageName }}
+        docker push ${{ steps.deploy.outputs.imageName }}:${{ steps.version.outputs.version }}
+
+    - name: Deploy app
+      uses: azure/arm-deploy@v1
+      with:
+        resourceGroupName: lookup
+        template: .azure/app.bicep
+        parameters: app=${{ steps.deploy.outputs.siteName }} image=${{ steps.deploy.outputs.imageName }}:${{ steps.version.outputs.version }}

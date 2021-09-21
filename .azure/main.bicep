@@ -1,5 +1,4 @@
 param name string = 'lookup'
-param version string = '1.0.0'
 param sqlAdministratorLogin string = name
 
 @secure()
@@ -38,15 +37,15 @@ module sql './sql.bicep' = {
   }
 }
 
-var image = '${cr.outputs.name}${environment().suffixes.acrLoginServer}/${name}:${version}'
-
 module web './web.bicep' = {
   name: 'web-${deployment().name}'
   params: {
-    managedIdentityId: id.id
     virtualNetworkId: vnet.outputs.id
     virtualNetworkSubnetId: vnet.outputs.subnetId
-    image: image
+    managedIdentity: {
+      id: id.id
+      clientId: id.properties.clientId
+    }
     appInsightsInstrumentationKey: log.outputs.instrumentationKey
     redisConnectionString: redis.outputs.connectionString
     sqlConnectionString: sql.outputs.connectionString
@@ -54,4 +53,5 @@ module web './web.bicep' = {
 }
 
 output registryName string = cr.outputs.name
-output imageName string = image
+output imageName string = '${cr.outputs.name}${environment().suffixes.acrLoginServer}/${name}'
+output siteName string = web.outputs.name

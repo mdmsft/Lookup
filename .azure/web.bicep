@@ -1,7 +1,6 @@
-param managedIdentityId string
-param image string
-param virtualNetworkSubnetId string
+param managedIdentity object
 param virtualNetworkId string
+param virtualNetworkSubnetId string
 param sqlConnectionString string
 param redisConnectionString string
 param appInsightsInstrumentationKey string
@@ -37,13 +36,13 @@ resource plan 'Microsoft.Web/serverfarms@2021-01-01' = {
 resource site 'Microsoft.Web/sites@2021-01-01' = {
   name: 'app-${resourceGroup().name}'
   location: resourceGroup().location
+  kind: 'app,linux,container'
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${managedIdentityId}': {}
+      '${managedIdentity.id}': {}
     }
   }
-  kind: 'app,linux,container'
   properties: {
     enabled: true
     serverFarmId: plan.id
@@ -53,11 +52,11 @@ resource site 'Microsoft.Web/sites@2021-01-01' = {
     virtualNetworkSubnetId: virtualNetworkSubnetId
     siteConfig: {
       acrUseManagedIdentityCreds: true
+      acrUserManagedIdentityID: managedIdentity.clientId
       alwaysOn: true
       ftpsState: 'Disabled'
       healthCheckPath: '/healthz'
       http20Enabled: true
-      linuxFxVersion: 'DOCKER|${image}'
       minTlsVersion: '1.2'
       numberOfWorkers: 1
       use32BitWorkerProcess: false
@@ -82,3 +81,5 @@ resource site 'Microsoft.Web/sites@2021-01-01' = {
     }
   }
 }
+
+output name string = site.name
