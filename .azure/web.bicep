@@ -1,5 +1,4 @@
 param managedIdentity object
-param virtualNetworkId string
 param virtualNetworkSubnetId string
 param sqlConnectionString string
 param redisConnectionString string
@@ -72,13 +71,6 @@ resource site 'Microsoft.Web/sites@2021-01-01' = {
   resource connectionstrings 'config' = {
     name: 'connectionstrings'
     properties: connectionStrings
-  }
-
-  resource virtualNetworkConnection 'virtualNetworkConnections' = {
-    name: 'default'
-    properties: {
-      vnetResourceId: virtualNetworkId
-    }
   }
 }
 

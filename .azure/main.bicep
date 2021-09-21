@@ -40,7 +40,6 @@ module sql './sql.bicep' = {
 module web './web.bicep' = {
   name: 'web-${deployment().name}'
   params: {
-    virtualNetworkId: vnet.outputs.id
     virtualNetworkSubnetId: vnet.outputs.subnetId
     managedIdentity: {
       id: id.id
