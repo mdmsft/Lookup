@@ -40,7 +40,7 @@ jobs:
 
     - name: Build container image
       run: |
-        docker built -t ${{ steps.deploy.outputs.imageName }}:${{ steps.version.outputs.version }} ./Lookup
+        docker build -t ${{ steps.deploy.outputs.imageName }}:${{ steps.version.outputs.version }} ./Lookup
     
     - name: Scan container image
       uses: Azure/container-scan@v0
