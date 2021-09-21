@@ -5,6 +5,11 @@ param sqlAdministratorLogin string = name
 @secure()
 param sqlAdministratorLoginPassword string
 
+resource id 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
+  name: 'id-${resourceGroup().name}'
+  location: resourceGroup().location
+}
+
 module vnet 'vnet.bicep' = {
   name: 'vnet-${deployment().name}'
 }
@@ -15,6 +20,9 @@ module log './log.bicep' = {
 
 module cr './cr.bicep' = {
   name: 'cr-${deployment().name}'
+  params: {
+    identityPrincipalId: id.properties.principalId
+  }
 }
 
 module redis './redis.bicep' = {
@@ -35,20 +43,13 @@ var image = '${cr.outputs.name}${environment().suffixes.acrLoginServer}/${name}:
 module web './web.bicep' = {
   name: 'web-${deployment().name}'
   params: {
+    managedIdentityId: id.id
     virtualNetworkId: vnet.outputs.id
     virtualNetworkSubnetId: vnet.outputs.subnetId
     image: image
     appInsightsInstrumentationKey: log.outputs.instrumentationKey
     redisConnectionString: redis.outputs.connectionString
     sqlConnectionString: sql.outputs.connectionString
-  }
-}
-
-module rbac 'rbac.bicep' = {
-  name: 'rbac-${deployment().name}'
-  params: {
-    appServicePrincipalId: web.outputs.oid
-    containerRegistryName: cr.outputs.name
   }
 }
 

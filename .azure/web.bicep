@@ -1,3 +1,4 @@
+param managedIdentityId string
 param image string
 param virtualNetworkSubnetId string
 param virtualNetworkId string
@@ -37,7 +38,10 @@ resource site 'Microsoft.Web/sites@2021-01-01' = {
   name: 'app-${resourceGroup().name}'
   location: resourceGroup().location
   identity: {
-    type: 'SystemAssigned'
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentityId}': {}
+    }
   }
   kind: 'app,linux,container'
   properties: {
@@ -78,7 +82,3 @@ resource site 'Microsoft.Web/sites@2021-01-01' = {
     }
   }
 }
-
-output oid string = site.identity.principalId
-
-output ips array = split(site.properties.outboundIpAddresses, ',')
