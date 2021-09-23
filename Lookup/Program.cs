@@ -48,7 +48,7 @@ public static class Program
                     {
                         context.Response.StatusCode = (int)HttpStatusCode.OK;
                         context.Response.Headers[HeaderNames.ContentType] = MediaTypeNames.Text.Plain;
-                        await context.Response.BodyWriter.WriteAsync(new ReadOnlyMemory<byte>(Encoding.ASCII.GetBytes($"[{Environment.MachineName}] ${value}")));
+                        await context.Response.BodyWriter.WriteAsync(new ReadOnlyMemory<byte>(Encoding.ASCII.GetBytes(value)));
                         await context.Response.BodyWriter.FlushAsync();
                     }
                     else

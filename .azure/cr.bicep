@@ -8,7 +8,7 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2021-06-01-pr
   }
   properties: {
     adminUserEnabled: false
-    anonymousPullEnabled: false
+    anonymousPullEnabled: true
     publicNetworkAccess: 'Enabled'
   }
 }
