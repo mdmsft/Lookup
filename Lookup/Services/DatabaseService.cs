@@ -53,7 +53,7 @@ internal class DatabaseService
             var insertIntoCommandText = sb.ToString();
             using SqlCommand insertIntoCommand = new(insertIntoCommandText, connection);
             await insertIntoCommand.ExecuteNonQueryAsync();
-            logger.LogInformation(3005, "Insertied 1000/{count} values starting from index {index}", limit, offset);
+            logger.LogInformation(3005, "Inserted 1000/{count} values starting from index {index}", limit, offset);
             sb.Clear();
             offset += 1000;
         } while (offset < limit);

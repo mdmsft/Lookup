@@ -20,7 +20,10 @@ module log './log.bicep' = {
 module cr './cr.bicep' = {
   name: 'cr-${deployment().name}'
   params: {
-    identityPrincipalId: id.properties.principalId
+    principals: [
+      id.properties.principalId
+      web.outputs.principalId
+    ]
   }
 }
 

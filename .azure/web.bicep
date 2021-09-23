@@ -26,6 +26,7 @@ resource plan 'Microsoft.Web/serverfarms@2021-01-01' = {
   sku: {
     name: 'S1'
     tier: 'Standart'
+    capacity: 10
   }
   properties: {
     reserved: true
@@ -37,7 +38,7 @@ resource site 'Microsoft.Web/sites@2021-01-01' = {
   location: resourceGroup().location
   kind: 'app,linux,container'
   identity: {
-    type: 'UserAssigned'
+    type: 'SystemAssigned, UserAssigned'
     userAssignedIdentities: {
       '${managedIdentity.id}': {}
     }
@@ -55,7 +56,7 @@ resource site 'Microsoft.Web/sites@2021-01-01' = {
       alwaysOn: true
       ftpsState: 'Disabled'
       healthCheckPath: '/healthz'
-      http20Enabled: true
+      http20Enabled: false
       minTlsVersion: '1.2'
       numberOfWorkers: 1
       use32BitWorkerProcess: false
@@ -75,3 +76,4 @@ resource site 'Microsoft.Web/sites@2021-01-01' = {
 }
 
 output name string = site.name
+output principalId string = site.identity.principalId

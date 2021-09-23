@@ -6,15 +6,17 @@ EXPOSE 80
 EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+ARG VERSION=1.0.0
 WORKDIR /src
 COPY ["Lookup/Lookup.csproj", "Lookup/"]
 RUN dotnet restore "Lookup/Lookup.csproj"
 COPY . .
 WORKDIR "/src/Lookup"
-RUN dotnet build "Lookup.csproj" -c Release -o /app/build
+RUN dotnet build "Lookup.csproj" -p:Version=${VERSION} -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Lookup.csproj" -c Release -o /app/publish
+ARG VERSION=1.0.0
+RUN dotnet publish "Lookup.csproj" -p:Version=${VERSION} -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
