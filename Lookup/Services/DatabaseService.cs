@@ -12,7 +12,7 @@ internal class DatabaseService
 {
     private readonly string connectionString;
     private readonly ILogger<DatabaseService> logger;
-    private readonly Regex machineNameRegex = new ("^[A-Z]", RegexOptions.Singleline | RegexOptions.Compiled);
+    private readonly Regex machineNameRegex = new ("^[a-f]", RegexOptions.Singleline | RegexOptions.Compiled);
 
     public DatabaseService(IConfiguration configuration, ILogger<DatabaseService> logger)
     {
