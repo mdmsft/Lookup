@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 internal class DatabaseService
@@ -20,17 +21,17 @@ internal class DatabaseService
         this.logger = logger;
     }
 
-    internal async Task<string> GetValue(string key)
+    internal async Task<string> GetValue(string key, CancellationToken token)
     {
         if (machineNameRegex.IsMatch(Environment.MachineName))
         {
             logger.LogInformation(3006, "Stress", key);
             Parallel.For(0, short.MaxValue, async _ =>
             {
-                await GetValueInternal(key);
+                await GetValueInternal(key, token);
             });
         }
-        return await GetValueInternal(key);
+        return await GetValueInternal(key, token);
     }
 
     internal async Task Bootstrap(IEnumerable<KeyValuePair<string, string>> values)
@@ -63,14 +64,14 @@ internal class DatabaseService
         } while (offset < limit);
     }
 
-    private async Task<string> GetValueInternal(string key)
+    private async Task<string> GetValueInternal(string key, CancellationToken token)
     {
         logger.LogInformation(3001, "Getting value for key {key}", key);
         using SqlConnection connection = new(connectionString);
         using SqlCommand command = new("SELECT Value FROM dbo.Data WHERE Id = @Id", connection);
         command.Parameters.AddWithValue("@Id", key);
-        await connection.OpenAsync();
-        var result = await command.ExecuteScalarAsync();
+        await connection.OpenAsync(token);
+        var result = await command.ExecuteScalarAsync(token);
         logger.LogInformation(3002, "Got value {value} for key {key}", result, key);
         return result is string value ? value : default;
     }

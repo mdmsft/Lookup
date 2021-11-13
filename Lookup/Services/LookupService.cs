@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 internal class LookupService
@@ -29,7 +30,16 @@ internal class LookupService
 
         logger.LogInformation(1003, "Value for key {key} is not in cache, getting it from database", key);
 
-        value = await database.GetValue(key);
+        CancellationTokenSource cts = new();
+        cts.CancelAfter(TimeSpan.FromSeconds(1));
+        try
+        {
+             value = await database.GetValue(key, cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return default;
+        }
         if (value is not null)
         {
             logger.LogInformation(1004, "Got value {value} for key {key} from database, caching it", value, key);
